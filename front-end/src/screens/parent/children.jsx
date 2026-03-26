@@ -7,13 +7,13 @@ import * as SecureStore from 'expo-secure-store';
 const children = ({navigation}) => {
    const getinfo= async()=>{
     const token= await SecureStore.getItemAsync("access_token");
-    const response=await AuthAPI.get("/Auth",{
+    const response=await AuthAPI.get("/auth/users",{
       headers: {
         Authorization:`bearer ${token}`,
       }
     });
     console.log(response.data);
-    if(response.data==="success"){
+    if(response.data.message==="connexion reussie"){
       console.log("ok");
     }else{
       console.log("not ok");
