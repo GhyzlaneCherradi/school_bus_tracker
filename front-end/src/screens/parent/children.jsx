@@ -12,7 +12,7 @@ const children = ({navigation}) => {
         Authorization:`bearer ${token}`,
       }
     });
-    console.log(response.data);
+    console.log(response.data.message);
     if(response.data.message==="connexion reussie"){
       console.log("ok");
     }else{

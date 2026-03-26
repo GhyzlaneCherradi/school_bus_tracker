@@ -17,7 +17,7 @@ constructor(private readonly authService: AuthService) {}
     const {email, password}= body;
     return this.authService.loginjwt(email, password);
 }
-@UseGuards(AuthGuard())
+@UseGuards(AuthGuard()) // lance l'execution de passport ==> strategy 
 @Get('users')
 getUsers(){
     console.log(this.authService.getUsers())

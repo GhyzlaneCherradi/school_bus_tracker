@@ -8,7 +8,7 @@ const useAuth=(setisloggedin)=>{
         const response=await AuthAPI.post("/auth/login",{email,password});
       console.log(response.data);
  if(response.data.message==="connexion reussie"){
-   await SecureStore.setItemAsync("access_token",response.data.token);
+   await SecureStore.setItemAsync("access_token",response.data.token); // stockage du token 
      setisloggedin(true);
      setError(""); 
      return true;
