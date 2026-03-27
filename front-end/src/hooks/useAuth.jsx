@@ -1,23 +1,39 @@
-import { useState } from "react";
-import axios from "axios";
-import AuthAPI from "../apis/AuthAPI";
-import * as SecureStore from 'expo-secure-store';
-const useAuth=(setisloggedin)=>{
-    const [error,setError]=useState("");
-    const login= async(email, password)=>{
-        const response=await AuthAPI.post("/auth/login",{email,password});
-      console.log(response.data);
- if(response.data.message==="connexion reussie"){
-   await SecureStore.setItemAsync("access_token",response.data.token); // stockage du token 
-     setisloggedin(true);
-     setError(""); 
-     return true;
-   }else{
-    setError("Email ou mot de passe incorrect");
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../services/AuthService";
+import { loginStart, loginSuccess, loginFailure } from "../Redux/auth_Slice";
+
+const useAuth = () => { // l'etat setIsloggedIn vient du composant parent
+                                     // ce hook modifie un état global (ou partagé) sans le posséder
+                                     // prob 1: Couplage fort avec le parent => n’est pas autonome
+                                     // prob 2: Viol de : Single Source of Truth
+                                     // prob 3: props drilling
+              // => solution : Un état global doit être centralisé (Context ou Redux), pas distribué via des fonctions.
+ const dispatch = useDispatch();
+ const { error, loading } = useSelector((state) => state.auth);
+
+  const login = async (email, password) => {
+    if (!email || !password) {
+      dispatch(loginFailure("Veuillez remplir tous les champs"));
       return false;
-   }
+    }
+
+    dispatch(loginStart());
+
+    try {
+      await loginUser(email, password);
+      dispatch(loginSuccess());
+      return true;
+    } catch (err) {
+      if (err.message === "INVALID_CREDENTIALS") {
+        dispatch(loginFailure("Email ou mot de passe incorrect"));
+      } else {
+        dispatch(loginFailure("Une erreur est survenue lors de la connexion"));
+      }
+      return false;
+    }
+  };
+
+  return { login, error, loading };
 };
-return {login,error};
-}
 
 export default useAuth;

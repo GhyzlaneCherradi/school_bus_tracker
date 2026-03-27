@@ -1,11 +1,5 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+
+import {View,Text,TouchableOpacity,ScrollView,StyleSheet,} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ProfileScreen = ({ navigation }) => {
@@ -14,7 +8,7 @@ const ProfileScreen = ({ navigation }) => {
     email: "Name.parent@gmail.com",
     phone: "+212 6 12 34 56 78",
     address: "Mohammedia, Morocco",
-    relation: "Mother",
+    relation: "Father",
   };
 
   const children = [

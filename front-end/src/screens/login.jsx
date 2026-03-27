@@ -3,15 +3,15 @@ import styles from "../styles/loginStyle";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import useAuth from "../hooks/useAuth";
-const LoginScreen = ({route,navigation}) => {
+const LoginScreen = ({navigation}) => {
 
-  const {isloggedin, setisloggedin}=route.params;
   const [email, setemail]=useState("");
   const [password,setpassword]=useState("");
-  const {login,error}= useAuth(setisloggedin);
-  const handlelogin=()=>{
-      login(email,password);
+  const { login, error, loading } = useAuth();
+  const handlelogin=async()=>{
+       await login(email,password);
   }
+  
   return (
     <SafeAreaView style={styles.container}>
       {/* Title */}
