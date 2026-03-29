@@ -3,6 +3,26 @@
     "@nestjs/config": "^4.0.3",
     "@nestjs/mapped-types": "^2.1.0",
     "bcrypt": "^6.0.0",
-    "class-validator": "^0.14.4"
-  }
+    "class-validator": "^0.14.4",
+    "socket.io-client": "^4.8.3"
+  },
+  "name": "school_bus_tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GhyzlaneCherradi/school_bus_tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GhyzlaneCherradi/school_bus_tracker/issues"
+  },
+  "homepage": "https://github.com/GhyzlaneCherradi/school_bus_tracker#readme"
 }

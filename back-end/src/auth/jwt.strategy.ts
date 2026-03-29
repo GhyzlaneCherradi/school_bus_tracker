@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import {Strategy,ExtractJwt} from 'passport-jwt'
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy) { //wrapper class
    constructor(){
         super({
       // Où trouver le token
@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
    }
     validate(payload:any){
-        // le payload sera injecté dans user.req
+        // le payload sera injecté dans user.req=payload
         return payload;
     }
 

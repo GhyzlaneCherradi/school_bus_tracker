@@ -17,7 +17,6 @@ getUsers(){
     console.log(this.authService.getUsers())
     return this.authService.getUsers();
 }
-
 } 
 
 
