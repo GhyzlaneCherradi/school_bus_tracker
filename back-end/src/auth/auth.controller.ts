@@ -5,13 +5,7 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
 constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  register(@Body() body:{email: string, password:string,role:string}): string {
-    const {email, password,role}= body;
-  return this.authService.register(email, password,role) ;}
-
-
-  @Post('login')
+@Post('login')
   login(@Body() body:{email: string, password: string}){
     console.log(body)
     const {email, password}= body;

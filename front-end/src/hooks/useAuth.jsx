@@ -9,24 +9,27 @@ const useAuth = () => { // l'etat setIsloggedIn vient du composant parent
                                      // prob 3: props drilling
               // => solution : Un état global doit être centralisé (Context ou Redux), pas distribué via des fonctions.
  const dispatch = useDispatch();
+ 
  const { error, loading } = useSelector((state) => state.auth);
-
   const login = async (email, password) => {
+    // Validation des entrées
     if (!email || !password) {
       dispatch(loginFailure("Veuillez remplir tous les champs"));
       return false;
     }
-
+    //Orchestration Redux
     dispatch(loginStart());
-
     try {
       await loginUser(email, password);
+      // Orchestration Redux
       dispatch(loginSuccess());
       return true;
     } catch (err) {
       if (err.message === "INVALID_CREDENTIALS") {
+        //Orchestration Redux
         dispatch(loginFailure("Email ou mot de passe incorrect"));
       } else {
+        //Orchestration Redux
         dispatch(loginFailure("Une erreur est survenue lors de la connexion"));
       }
       return false;

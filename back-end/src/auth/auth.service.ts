@@ -1,56 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { response } from 'express';
+import { UserService } from '../user/user.service';
+import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class AuthService {
-
-  constructor(private readonly jwtService: JwtService) {}
-private users:any[]=[]; // tableau pour stocker les utilisateur
-
-register(email: string , password : string,role:string) : string 
-{
-    const user={email:email,password:password,role:role}
-    this.users.push(user);
-    return 'Utilisateur enregistré avec succès';
-}
-
-login(email: string , password : string) : string
-{
-    const user = this.users.find((user)=>user.email===email&& user.password===password);
-    return user ? 'connexion reussie': 'cridentials invalide';
-}
-
-loginjwt(email: string , password : string) : any
-{
- if(!email || !password){
-    return "email or password is missing !!";
- }
- const user = this.users.find((user)=>user.email===email&& user.password===password);
- if(!user){
-    return "invalid credentials ";
- }
-  // creation du payload 
-
-  const payload={
-    email:user.email,
-    role:user.role
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService
+  ) { }
+  //login method
+  async login(email: string, password: string): Promise<string> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      return 'cridentials invalide';
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    return isMatch ? 'connexion reussie' : 'cridentials invalide';
   }
 
-  //géneration du token 
+  // login +jwt generation (access token)
 
-  const access_token=this.jwtService.sign(payload);
+  async loginjwt(email: string, password: string): Promise<any> {
+    if (!email || !password) {
+      throw new UnauthorizedException("email or password is missing !!");
+    }
 
-  // retour du token au client
-  const response= {
-    message: 'connexion reussie',
-    token:access_token
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException("invalid credentials");
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException("invalid credentials");
+    }
+
+    // creation du payload 
+    const payload = {
+      email: user.email,
+      role: user.role,
+      sub: user.id
+    };
+
+    // géneration du token 
+    const access_token = this.jwtService.sign(payload);
+
+    // retour du token au client
+    return {
+      message: 'connexion reussie',
+      token: access_token
+    };
   }
-  console.log(response);
-  return response;
 
-}
-
-getUsers(){
-    return this.users;
-}
+  async getUsers() {
+    return this.userService.findAll();
+  }
 }
