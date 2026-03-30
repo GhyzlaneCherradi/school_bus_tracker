@@ -9,7 +9,7 @@ import { TrackingModule } from './tracking/tracking.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // accessible partout dans l’application
+      isGlobal: true, // accessible partout sans import
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({

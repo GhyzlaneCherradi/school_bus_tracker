@@ -16,6 +16,7 @@ export const useBusLocation = () => {
     const socket = io(`${API_BASE_URL}/tracking`, {
       reconnectionAttempts: 5,
       autoConnect: true,
+      transports:["websocket"],
     });
 
     socketRef.current = socket;
