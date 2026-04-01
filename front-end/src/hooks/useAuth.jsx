@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../services/AuthService";
+import { loginUser, registerPushToken } from "../services/AuthService";
 import { loginStart, loginSuccess, loginFailure } from "../Redux/auth_Slice";
+import { registerForPushNotificationsAsync } from "../services/NotificationService";
 
 const useAuth = () => { // l'etat setIsloggedIn vient du composant parent
                                      // ce hook modifie un état global (ou partagé) sans le posséder
@@ -20,9 +21,23 @@ const useAuth = () => { // l'etat setIsloggedIn vient du composant parent
     //Orchestration Redux
     dispatch(loginStart());
     try {
-      await loginUser(email, password);
+      const authData = await loginUser(email, password);
       // Orchestration Redux
-      dispatch(loginSuccess());
+      dispatch(loginSuccess(authData?.role || null));
+
+      // Notification Push Registration
+      try {
+        const pushToken = await registerForPushNotificationsAsync();
+        if (pushToken) {
+          const success = await registerPushToken(pushToken);
+          if (success) {
+            console.log("Push token registered successfully");
+          }
+        }
+      } catch (pushErr) {
+        console.log("Failed to register push token:", pushErr);
+      }
+
       return true;
     } catch (err) {
       if (err.message === "INVALID_CREDENTIALS") {

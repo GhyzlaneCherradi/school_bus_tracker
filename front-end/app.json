@@ -20,13 +20,26 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "googleServicesFile": "./google-services.json",
+      "edgeToEdgeEnabled": true,
+      "package": "com.ilisi.frontend",
+      "config": {
+        "googleMaps": {
+          "apiKey": "VOTRE_CLE_API_GOOGLE_MAPS_ICI"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "faad833e-369f-45d4-a46c-c0c942de7801"
+      }
+    },
+    "owner": "ilisi"
   }
 }

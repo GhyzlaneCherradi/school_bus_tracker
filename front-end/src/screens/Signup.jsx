@@ -1,18 +1,122 @@
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
+  View,
 } from "react-native";
-import { useState } from "react";
+import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
+import { useState, useEffect } from "react";
 import styles from "../styles/signUp";
+import AuthAPI from "../apis/AuthAPI";
 
-const SignupScreen = () => {
+const SignupScreen = ({ navigation }) => {
   const [role, setRole] = useState("parent");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [region, setRegion] = useState({
+    latitude: 33.5731, // Default to Casablanca if no location
+    longitude: -7.5898,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
+
+  useEffect(() => {
+    if (role === "parent") {
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setError("Permission to access location was denied");
+          return;
+        }
+
+        let loc = await Location.getCurrentPositionAsync({});
+        const newRegion = {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+        setRegion(newRegion);
+        // Default marker to current location
+        setLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+      })();
+    }
+  }, [role]);
+
+  const parseName = (name) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return { firstName: "", lastName: "" };
+
+    return {
+      firstName: parts[0],
+      lastName: parts.slice(1).join(" "),
+    };
+  };
+
+  const handleSignup = async () => {
+    setError("");
+
+    const { firstName, lastName } = parseName(fullName);
+    if (!firstName || !lastName) {
+      setError("Please enter full name (first and last).");
+      return;
+    }
+
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (role === "parent" && !location) {
+      setError("Please select your home location on the map.");
+      return;
+    }
+
+    const payload = {
+      firstName,
+      lastName,
+      email: email.trim().toLowerCase(),
+      password,
+      role,
+      phoneNumber: phoneNumber.trim() || undefined,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
+    };
+
+    try {
+      setLoading(true);
+      await AuthAPI.post("/user", payload);
+      navigation.navigate("login");
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message;
+      if (Array.isArray(apiMessage)) {
+        setError(apiMessage.join("\n"));
+      } else {
+        setError(apiMessage || "Signup failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onSignUpPress = async () => {
-    await handleSignup(role);
+    await handleSignup();
   };
 
   return (
@@ -65,17 +169,33 @@ const SignupScreen = () => {
         <TextInput
           placeholder="Email"
           style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
 
         <TextInput
           placeholder="Password"
           secureTextEntry
           style={styles.input}
+          value={password}
+          onChangeText={setPassword}
         />
 
         <TextInput
           placeholder="Full Name"
           style={styles.input}
+          value={fullName}
+          onChangeText={setFullName}
+        />
+
+        <TextInput
+          placeholder="Phone Number"
+          style={styles.input}
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
         />
 
         {/* HOME LOCATION (PARENT ONLY) */}
@@ -84,6 +204,17 @@ const SignupScreen = () => {
             <Text style={styles.mapLabel}>
               Select Home Location (required)
             </Text>
+            <MapView
+              style={styles.map}
+              region={region}
+              onRegionChangeComplete={setRegion}
+              onPress={(e) => setLocation(e.nativeEvent.coordinate)}
+            >
+              {location && <Marker coordinate={location} />}
+            </MapView>
+            <Text style={styles.mapHint}>
+              Tap on the map to place your home marker.
+            </Text>
           </View>
         )}
 
@@ -91,13 +222,16 @@ const SignupScreen = () => {
         <Text style={styles.terms}>
           By signing up you agree to our Terms & Privacy Policy.
         </Text>
+        {!!error && <Text style={styles.error}>{error}</Text>}
 
         {/* BUTTON */}
         <TouchableOpacity
           style={styles.signUpButton}
+          onPress={onSignUpPress}
+          disabled={loading}
         >
           <Text style={styles.buttonText}>
-             Sign Up
+            {loading ? "Creating account..." : "Sign Up"}
           </Text>
         </TouchableOpacity>
       </View>

@@ -2,9 +2,14 @@ import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
 import { API_BASE_URL } from '../../Config/Config';
-import { updateLocation, setConnectionStatus, setConnectionError } from '../Redux/Tracking-Slice';
+import {
+  updateLocation,
+  setLocationHistory,
+  setConnectionStatus,
+  setConnectionError,
+} from '../Redux/Tracking-Slice';
 
-export const useBusLocation = () => {
+export const useBusLocation = (busId) => {
   const dispatch = useDispatch();
   const socketRef = useRef(null);
 
@@ -14,9 +19,9 @@ export const useBusLocation = () => {
 
     // Connect to the WebSocket Gateway with the tracking namespace
     const socket = io(`${API_BASE_URL}/tracking`, {
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 5, // max 
       autoConnect: true,
-      transports:["websocket"],
+      transports: ["websocket"], // 
     });
 
     socketRef.current = socket;
@@ -24,6 +29,16 @@ export const useBusLocation = () => {
     socket.on('connect', () => {
       console.log('Socket Connected:', socket.id);
       dispatch(setConnectionStatus('connected'));
+
+      if (busId) {
+        socket.emit(
+          'getLatestLocations',
+          { busId, limit: 25 },
+          (history = []) => {
+            dispatch(setLocationHistory(history));
+          },
+        );
+      }
     });
 
     socket.on('disconnect', (reason) => {
@@ -41,19 +56,20 @@ export const useBusLocation = () => {
       dispatch(setConnectionError(`Error: ${err}`));
     });
 
-    // Listen for real-time location broadcasts from the backend
+    // Listening for real-time location broadcasts from the backend
     socket.on('locationUpdated', (data) => {
-      // Dispatches the new coordinates  to Redux
-      dispatch(updateLocation({ latitude: data.latitude, longitude: data.longitude }));
+      if (busId && data?.busId && data.busId !== busId) return;
+      // Dispatches the new coordinates  to global state 
+      dispatch(updateLocation(data));
     });
 
-    // Cleanup: Disconnect socket when the hook  unmounts
+    // Cleanup function: Disconnect socket when the hook  unmounts
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, [dispatch]);
+  }, [busId, dispatch]);
 
   return socketRef;
 };

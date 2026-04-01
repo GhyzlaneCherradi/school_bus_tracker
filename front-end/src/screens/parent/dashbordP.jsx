@@ -7,17 +7,36 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { getParentProfile } from "../../services/ParentDataService";
+import { updateParentProfile } from "../../Redux/Parent-Slice";
 
 const DashboardScreen = ({ navigation }) => {
-  const child = {
-    name: "Adam Cherradi",
-    school: "Al Amal School",
-    busNumber: "Bus 12",
-    pickupTime: "07:20 AM",
-    status: "On the way",
-    driverName: "Mr. Hassan",
-    driverPhone: "+212 6 12 34 56 78",
-  };
+  const dispatch = useDispatch();
+  const parent = useSelector((state) => state.parent);
+  const { selectedChildId, list } = useSelector((state) => state.children);
+  const tracking = useSelector((state) => state.tracking);
+  const alerts = useSelector((state) => state.alerts.list);
+
+  useEffect(() => {
+    const hydrate = async () => {
+      const apiParent = await getParentProfile();
+      if (apiParent) dispatch(updateParentProfile(apiParent));
+    };
+    hydrate();
+  }, [dispatch]);
+
+  const child = list.find((item) => item.id === selectedChildId) || list[0];
+  const unreadCount = alerts.filter((item) => !item.read).length;
+  const lastSeen = tracking.lastUpdated
+    ? new Date(tracking.lastUpdated).toLocaleTimeString()
+    : "No update yet";
+  const liveStatus = tracking.status === "connected"
+    ? (tracking.speed > 2 ? "Moving" : "Stopped")
+    : "Disconnected";
+
+  const locationMissing = !parent.latitude || !parent.longitude;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,23 +49,40 @@ const DashboardScreen = ({ navigation }) => {
           </Text>
         </View>
 
+        {/* Location Warning */}
+        {locationMissing && (
+          <View style={styles.warningCard}>
+            <Text style={styles.warningTitle}> Home Location Required</Text>
+            <Text style={styles.warningText}>
+              Please set your home location in Profile to receive proximity alerts.
+            </Text>
+            <TouchableOpacity
+              style={styles.warningButton}
+              onPress={() => navigation.navigate("profile")}
+            >
+              <Text style={styles.warningButtonText}>Set Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Child Info Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Child Information</Text>
-          <Text style={styles.infoText}>Name: {child.name}</Text>
-          <Text style={styles.infoText}>School: {child.school}</Text>
-          <Text style={styles.infoText}>Assigned Bus: {child.busNumber}</Text>
+          <Text style={styles.infoText}>Name: {child?.name || "N/A"}</Text>
+          <Text style={styles.infoText}>School: {child?.school || "N/A"}</Text>
+          <Text style={styles.infoText}>Assigned Bus: {child?.busId || "N/A"}</Text>
         </View>
 
         {/* Bus Status Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Bus Status</Text>
-          <Text style={styles.status}>{child.status}</Text>
-          <Text style={styles.infoText}>Pickup Time: {child.pickupTime}</Text>
+          <Text style={styles.status}>{liveStatus}</Text>
+          <Text style={styles.infoText}>Assigned Bus: {child?.busId || "N/A"}</Text>
+          <Text style={styles.infoText}>Last Update: {lastSeen}</Text>
 
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => navigation.navigate("MapScreen")}
+            onPress={() => navigation.navigate("Tracking")}
           >
             <Text style={styles.primaryButtonText}>Track Bus Live</Text>
           </TouchableOpacity>
@@ -55,8 +91,8 @@ const DashboardScreen = ({ navigation }) => {
         {/* Driver Info */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Driver Information</Text>
-          <Text style={styles.infoText}>Driver: {child.driverName}</Text>
-          <Text style={styles.infoText}>Phone: {child.driverPhone}</Text>
+          <Text style={styles.infoText}>Driver: {child?.driverName || "N/A"}</Text>
+          <Text style={styles.infoText}>Phone: {child?.driverPhone || "N/A"}</Text>
 
           <TouchableOpacity style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Call Driver</Text>
@@ -69,21 +105,21 @@ const DashboardScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate("NotificationsScreen")}
+            onPress={() => navigation.navigate("alert")}
           >
             <Text style={styles.actionText}>View Notifications</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate("AttendanceScreen")}
+            onPress={() => navigation.navigate("Children")}
           >
-            <Text style={styles.actionText}>Check Attendance</Text>
+            <Text style={styles.actionText}>Select Child</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate("ProfileScreen")}
+            onPress={() => navigation.navigate("profile")}
           >
             <Text style={styles.actionText}>Manage Profile</Text>
           </TouchableOpacity>
@@ -93,7 +129,9 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Latest Update</Text>
           <Text style={styles.infoText}>
-            The bus has left the previous stop and is expected in 10 minutes.
+            {unreadCount > 0
+              ? `You have ${unreadCount} unread alerts.`
+              : "No new alerts for your child."}
           </Text>
         </View>
       </ScrollView>
@@ -186,6 +224,38 @@ const styles = StyleSheet.create({
   actionText: {
     color: "#1D4ED8",
     fontSize: 15,
+    fontWeight: "600",
+  },
+  warningCard: {
+    backgroundColor: "#FEF2F2",
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+  },
+  warningTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#B91C1C",
+    marginBottom: 4,
+  },
+  warningText: {
+    fontSize: 14,
+    color: "#7F1D1D",
+    marginBottom: 12,
+  },
+  warningButton: {
+    backgroundColor: "#EF4444",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  warningButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "600",
   },
 });

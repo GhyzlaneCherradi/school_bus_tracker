@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { TrackingModule } from './tracking/tracking.module';
+import { ParentModule } from './parent/parent.module';
+import { AdminModule } from './admin/admin.module';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +32,9 @@ import { TrackingModule } from './tracking/tracking.module';
     AuthModule,
     UserModule,
     TrackingModule,
+    ParentModule,
+    AdminModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,20 +1,41 @@
-
 import {View,Text,TouchableOpacity,ScrollView,StyleSheet,} from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../Redux/auth_Slice";
+import { updateParentProfile } from "../../Redux/Parent-Slice";
+import { setChildren } from "../../Redux/Children-Slice";
+import * as SecureStore from "expo-secure-store";
+import { getParentProfile, getParentChildren } from "../../services/ParentDataService";
 
 const ProfileScreen = ({ navigation }) => {
-  const parent = {
-    name: " Name Last name",
-    email: "Name.parent@gmail.com",
-    phone: "+212 6 12 34 56 78",
-    address: "Mohammedia, Morocco",
-    relation: "Father",
+  const dispatch = useDispatch();
+  const parent = useSelector((state) => state.parent);
+  const children = useSelector((state) => state.children.list);
+  const initials = (parent.name || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "P";
+
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync("access_token");
+    dispatch(logout());
+    navigation.navigate("login");
   };
 
-  const children = [
-    { id: 1, name: "Child 1", level: "Grade 4", bus: "Bus 12" },
-    { id: 2, name: "Child 2", level: "Grade 1", bus: "Bus 08" },
-  ];
+  useEffect(() => {
+    const hydrate = async () => {
+      const apiParent = await getParentProfile();
+      if (apiParent) dispatch(updateParentProfile(apiParent));
+
+      const apiChildren = await getParentChildren();
+      if (apiChildren.length > 0) dispatch(setChildren(apiChildren));
+    };
+    hydrate();
+  }, [dispatch]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -22,10 +43,16 @@ const ProfileScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.topLogoutButton} onPress={handleLogout}>
+            <Text style={styles.topLogoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Header */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>NL</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
 
           <Text style={styles.title}>{parent.name}</Text>
@@ -51,8 +78,31 @@ const ProfileScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.infoBox}>
-            <Text style={styles.label}>Address</Text>
-            <Text style={styles.value}>{parent.address}</Text>
+            <Text style={styles.label}>Home Location</Text>
+            {parent.latitude && parent.longitude ? (
+              <View style={styles.miniMapContainer}>
+                <MapView
+                  style={styles.miniMap}
+                  initialRegion={{
+                    latitude: parent.latitude,
+                    longitude: parent.longitude,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: parent.latitude,
+                      longitude: parent.longitude,
+                    }}
+                  />
+                </MapView>
+              </View>
+            ) : (
+              <Text style={styles.noLocationText}>Location not set</Text>
+            )}
           </View>
         </View>
 
@@ -64,15 +114,11 @@ const ProfileScreen = ({ navigation }) => {
             <View key={child.id} style={styles.childCard}>
               <Text style={styles.childName}>{child.name}</Text>
               <Text style={styles.childText}>{child.level}</Text>
-              <Text style={styles.childText}>Assigned Bus: {child.bus}</Text>
+              <Text style={styles.childText}>Assigned Bus: {child.busId}</Text>
             </View>
           ))}
         </View>
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -89,6 +135,23 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
+  },
+  topBar: {
+    width: "100%",
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+  topLogoutButton: {
+    backgroundColor: "#7300A1",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    elevation: 2,
+  },
+  topLogoutText: {
+    color: "#f3e3e3",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   profileCard: {
@@ -222,13 +285,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  logoutButton: {
-    backgroundColor: "#7300A1",
-    paddingVertical: 14,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 20,
-    elevation: 3,
-  },
 });

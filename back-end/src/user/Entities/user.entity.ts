@@ -33,6 +33,15 @@ export class User {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phoneNumber: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  latitude: number;
+
+  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  longitude: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  pushToken: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

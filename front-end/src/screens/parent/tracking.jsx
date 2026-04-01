@@ -5,14 +5,19 @@ import { useBusLocation } from "../../hooks/useBusLocation";
 import BusMap from "../../components/BusMap";
 
 const Tracking = () => {
+  const selectedChild = useSelector((state) =>
+    state.children.list.find((child) => child.id === state.children.selectedChildId)
+  );
+  const selectedBusId = selectedChild?.busId;
   // initialisation of  the websocket connection
-  useBusLocation();
+  useBusLocation(selectedBusId);
 
   // select the location controlled by the socket
   const trackingState = useSelector((state) => state.tracking);
-  const { location, status, error } = trackingState ;
+  const { location, status, error, busId, speed, lastUpdated } = trackingState ;
 
   const getStatusMessage = () => {
+    if (!selectedBusId) return "Select a child first";
     if (status === 'connected') return 'On the way';
     if (status === 'connecting') return 'Connecting...';
     if (status === 'REDUX_LOADED') return 'Waiting for Connection Hook...';
@@ -21,11 +26,27 @@ const Tracking = () => {
     return 'Disconnected';
   };
 
+  const getLiveState = () => {
+    if (typeof speed !== "number") return "Unknown";
+    if (speed <= 2) return "Stopped";
+    return "Moving";
+  };
+
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return "No updates yet";
+    const date = new Date(lastUpdated);
+    if (Number.isNaN(date.getTime())) return "Invalid time";
+    return date.toLocaleTimeString();
+  };
+
   const busInfo = {
-    busNumber: "Bus ?",
+    busNumber: busId || "N/A",
     status: getStatusMessage(),
     currentLocation: location ? "Live Tracking Active" : "Waiting for location...",
-    estimatedArrival: "?"
+    estimatedArrival: "Calculating...",
+    movement: getLiveState(),
+    currentSpeed: typeof speed === "number" ? `${speed.toFixed(1)} km/h` : "N/A",
+    lastUpdated: formatLastUpdated(),
   };
 
   return (
@@ -63,6 +84,21 @@ const Tracking = () => {
           <View style={styles.infoBox}>
             <Text style={styles.label}>Estimated Arrival</Text>
             <Text style={styles.value}>{busInfo.estimatedArrival}</Text>
+          </View>
+
+          <View style={styles.infoBox}>
+            <Text style={styles.label}>Movement</Text>
+            <Text style={styles.value}>{busInfo.movement}</Text>
+          </View>
+
+          <View style={styles.infoBox}>
+            <Text style={styles.label}>Current Speed</Text>
+            <Text style={styles.value}>{busInfo.currentSpeed}</Text>
+          </View>
+
+          <View style={styles.infoBox}>
+            <Text style={styles.label}>Last Update</Text>
+            <Text style={styles.value}>{busInfo.lastUpdated}</Text>
           </View>
         </View>
       </ScrollView>

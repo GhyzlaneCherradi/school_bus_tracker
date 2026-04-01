@@ -1,11 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authSlice from "./auth_Slice";
+import authReducer from "./auth_Slice";
 import trackingReducer from "./Tracking-Slice";
+import childrenReducer from "./Children-Slice";
+import alertsReducer from "./Alerts-Slice";
+import settingsReducer from "./Settings-Slice";
+import parentReducer from "./Parent-Slice";
 
 const store = configureStore({
   reducer: {
-    auth: authSlice, // l'ajout du slice dans le store
-    tracking: trackingReducer
+    auth: authReducer, // l'ajout du slice dans le store
+    tracking: trackingReducer,
+    children: childrenReducer,
+    alerts: alertsReducer,
+    settings: settingsReducer,
+    parent: parentReducer,
   },
 });
 

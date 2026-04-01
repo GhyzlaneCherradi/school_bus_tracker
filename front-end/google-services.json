@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "126314219670",
+    "project_id": "busshooltracker",
+    "storage_bucket": "busshooltracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:126314219670:android:9e43248caf9611e1541ab7",
+        "android_client_info": {
+          "package_name": "com.ilisi.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuHvWp1D6l-Ia25z1d55vQBFZE7ag_3w8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

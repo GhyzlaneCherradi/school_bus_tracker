@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/Create-User.dto';
 import { UpdateUserDto } from './dto/Update-User.dto';
@@ -21,9 +22,20 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('parents')
+  findParents() {
+    return this.userService.findAllParents();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('push-token')
+  updatePushToken(@Req() req: any, @Body('pushToken') pushToken: string) {
+    return this.userService.updatePushToken(req.user.sub, pushToken);
   }
 
   @Patch(':id')

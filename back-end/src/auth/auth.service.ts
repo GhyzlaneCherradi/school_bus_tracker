@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly notificationService: NotificationService
   ) { }
   //login method
   async login(email: string, password: string): Promise<string> {
@@ -28,11 +30,13 @@ export class AuthService {
 
     const user = await this.userService.findByEmail(email);
     if (!user) {
+      console.log("okk");
       throw new UnauthorizedException("invalid credentials");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("ok");
       throw new UnauthorizedException("invalid credentials");
     }
 
@@ -46,10 +50,21 @@ export class AuthService {
     // géneration du token 
     const access_token = this.jwtService.sign(payload);
 
+    // Envoi d'une notification de test si un pushToken existe
+    if (user.pushToken) {
+      this.notificationService.sendNotification(
+        user.pushToken,
+        'Connexion réussie',
+        'Bienvenue dans l\'application ! Vos notifications sont prêtes.',
+      );
+    }
+
     // retour du token au client
     return {
       message: 'connexion reussie',
-      token: access_token
+      token: access_token,
+      role: user.role,
+      userId: user.id,
     };
   }
 

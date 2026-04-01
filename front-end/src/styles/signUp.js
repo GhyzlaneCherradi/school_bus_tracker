@@ -93,6 +93,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDD",
   },
+  mapHint: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 6,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
 
   terms: {
     fontSize: 12,
