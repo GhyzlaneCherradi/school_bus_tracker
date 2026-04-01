@@ -1,6 +1,6 @@
 // src/config/api.js
 const MOCK_URL = "https://bf3a92df-dc7a-441c-80dc-11ae4bb35595.mock.pstmn.io";
-const DEV_URL = "http://10.210.122.224:3000"; // error 
+const DEV_URL = "http://@Ip:3000"; // error 
 const PROD_URL = "https://api.myapp.com";
 
 const ENV = "dev"; // "mock" | "dev" | "prod"
